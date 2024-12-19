@@ -1,1 +1,1 @@
-# Site institucional GospelPass
+# Site institucional Bilheteria Gospel
