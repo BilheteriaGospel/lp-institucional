@@ -259,17 +259,15 @@
       </div>
     </footer>
 
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
-      defer
-    ></script>
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"
-      defer
-    ></script>
+    <!-- jQuery primeiro -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- jQuery Mask Plugin depois -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>
-      // First, define onSubmit in the global scope (outside of document.ready)
+      // First, define onSubmit in the global scope
       window.onSubmit = function (token) {
         // Collect form data
         const formData = {
@@ -317,45 +315,57 @@
         });
       };
 
-      // Then keep the rest of your jQuery document.ready code
-      $(document).ready(function () {
-        // Phone mask for Brazilian phone numbers
-        $("#phone").mask("(00) 00000-0000");
+      // Initialize mask after jQuery and jQuery Mask Plugin are loaded
+      function initializeMask() {
+        if (typeof $ !== "undefined" && typeof $.fn.mask !== "undefined") {
+          $(document).ready(function () {
+            // Apply phone mask
+            $("#phone").mask("(00) 00000-0000", {
+              onKeyPress: function (phone, e, field, options) {
+                // Ensure mask is always applied
+                const masks = ["(00) 00000-0000"];
+                $(field).mask(masks[0], options);
+              },
+            });
 
-        // Validate form before submission
-        function validateForm() {
-          const name = $("#name").val().trim();
-          const phone = $("#phone").val().replace(/\D/g, ""); // Remove non-digits
-          const email = $("#email").val().trim();
+            // Form validation
+            function validateForm() {
+              const name = $("#name").val().trim();
+              const phone = $("#phone").val().replace(/\D/g, "");
+              const email = $("#email").val().trim();
 
-          if (!name || phone.length < 10 || !email) {
-            alert("Por favor, preencha todos os campos corretamente.");
-            return false;
-          }
+              if (!name || phone.length < 11 || !email) {
+                alert("Por favor, preencha todos os campos corretamente.");
+                return false;
+              }
 
-          // Improved email validation
-          const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-          if (!emailRegex.test(email)) {
-            alert("Por favor, insira um e-mail válido.");
-            return false;
-          }
+              const emailRegex =
+                /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+              if (!emailRegex.test(email)) {
+                alert("Por favor, insira um e-mail válido.");
+                return false;
+              }
 
-          return true;
+              return true;
+            }
+
+            // Form submission
+            $("#signup-form").on("submit", function (e) {
+              e.preventDefault();
+              if (!validateForm()) {
+                return;
+              }
+              grecaptcha.execute();
+            });
+          });
+        } else {
+          // Retry after a short delay if dependencies aren't loaded yet
+          setTimeout(initializeMask, 100);
         }
+      }
 
-        // Prevent form submission and use reCAPTCHA
-        $("#signup-form").on("submit", function (e) {
-          e.preventDefault();
-
-          // Validate form first
-          if (!validateForm()) {
-            return;
-          }
-
-          // If form is valid, trigger reCAPTCHA
-          grecaptcha.execute();
-        });
-      });
+      // Start initialization
+      initializeMask();
     </script>
     <!-- Google tag (gtag.js) -->
     <script
