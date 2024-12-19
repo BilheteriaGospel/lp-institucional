@@ -269,6 +269,55 @@
     ></script>
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <script>
+      // First, define onSubmit in the global scope (outside of document.ready)
+      window.onSubmit = function (token) {
+        // Collect form data
+        const formData = {
+          name: $("#name").val().trim(),
+          telefone: $("#phone").val().replace(/\D/g, ""),
+          email: $("#email").val().trim(),
+          recaptchaToken: token,
+        };
+
+        // Disable submit button to prevent multiple submissions
+        $("#submit-btn")
+          .prop("disabled", true)
+          .html('<span class="spinner"></span> Enviando...');
+
+        // AJAX call to Google Apps Script
+        $.ajax({
+          url: "https://script.google.com/macros/s/AKfycbzDEB76UBEqLbmcMgD3PCwdaM6yeevOhIP5w5e-OVGFMoYcAiVPitu90BjRLNB0Im-G/exec",
+          type: "POST",
+          dataType: "json",
+          data: JSON.stringify(formData),
+          success: function (response) {
+            if (response.status === "success") {
+              $("#signup-container").html(`
+          <div class="bg-white p-10 rounded-xl shadow-2xl text-center">
+            <i class="fas fa-check-circle text-6xl text-green-500 mb-4 block"></i>
+            <h2 class="text-3xl font-bold mb-4 text-gray-900">Cadastro Realizado</h2>
+            <p class="text-gray-600 mb-4">
+              Obrigado por se cadastrar! Você será um dos primeiros a conhecer o Bilheteria Gospel.
+            </p>
+            <p class="text-gray-500">
+              Em breve, entraremos em contato pelo e-mail ou celular cadastrado.
+            </p>
+          </div>
+        `);
+            } else {
+              throw new Error("Erro no servidor");
+            }
+          },
+          error: function () {
+            // Re-enable submit button
+            $("#submit-btn").prop("disabled", false).text("Me avise!");
+            // Show error message
+            alert("Erro ao enviar cadastro. Por favor, tente novamente.");
+          },
+        });
+      };
+
+      // Then keep the rest of your jQuery document.ready code
       $(document).ready(function () {
         // Phone mask for Brazilian phone numbers
         $("#phone").mask("(00) 00000-0000");
@@ -306,55 +355,6 @@
           // If form is valid, trigger reCAPTCHA
           grecaptcha.execute();
         });
-
-        // reCAPTCHA callback function
-        window.onSubmit = function (token) {
-          // Collect form data
-          const formData = {
-            name: $("#name").val().trim(),
-            telefone: $("#phone").val().replace(/\D/g, ""),
-            email: $("#email").val().trim(),
-            recaptchaToken: token,
-          };
-
-          // Disable submit button to prevent multiple submissions
-          $("#submit-btn")
-            .prop("disabled", true)
-            .html('<span class="spinner"></span> Enviando...');
-
-          // AJAX call to Google Apps Script
-          $.ajax({
-            url: "https://script.google.com/macros/s/AKfycbzDEB76UBEqLbmcMgD3PCwdaM6yeevOhIP5w5e-OVGFMoYcAiVPitu90BjRLNB0Im-G/exec",
-            type: "POST",
-            dataType: "json",
-            data: JSON.stringify(formData),
-            success: function (response) {
-              if (response.status === "success") {
-                $("#signup-container").html(`
-            <div class="bg-white p-10 rounded-xl shadow-2xl text-center">
-              <i class="fas fa-check-circle text-6xl text-green-500 mb-4 block"></i>
-              <h2 class="text-3xl font-bold mb-4 text-gray-900">Cadastro Realizado</h2>
-              <p class="text-gray-600 mb-4">
-                Obrigado por se cadastrar! Você será um dos primeiros a conhecer o Bilheteria Gospel.
-              </p>
-              <p class="text-gray-500">
-                Em breve, entraremos em contato pelo e-mail ou celular cadastrado.
-              </p>
-            </div>
-          `);
-              } else {
-                throw new Error("Erro no servidor");
-              }
-            },
-            error: function () {
-              // Re-enable submit button
-              $("#submit-btn").prop("disabled", false).text("Me avise!");
-
-              // Show error message
-              alert("Erro ao enviar cadastro. Por favor, tente novamente.");
-            },
-          });
-        };
       });
     </script>
     <!-- Google tag (gtag.js) -->
